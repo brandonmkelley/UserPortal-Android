@@ -3,17 +3,16 @@ package com.example.userportal_android
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import com.github.nkzawa.emitter.Emitter
+import android.widget.Toast
 
-import com.github.nkzawa.socketio.client.IO;
-import com.github.nkzawa.socketio.client.Socket;
 import kotlinx.serialization.*
-import kotlinx.serialization.json.JSON
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
+import com.github.nkzawa.socketio.client.Socket
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
@@ -31,11 +30,11 @@ class MainActivity : AppCompatActivity() {
 
         initializeComponents()
 
+        setSocketIOListeners()
+
         setOnClickListener_SignupButton()
         setOnClickListener_LoginButton()
         setOnClickListener_LogoutButton()
-
-        setSocketIOListeners()
     }
 
     override fun onDestroy() {
@@ -59,8 +58,9 @@ class MainActivity : AppCompatActivity() {
                 emailEditText!!.text.toString(),
                 passwordEditText!!.text.toString())
 
-            Log.println(Log.DEBUG, TAG, Json.stringify(CredentialsRequestBody.serializer(), data))
-            socket?.emit("sign-up-request", Json.stringify(CredentialsRequestBody.serializer(), data))
+            Log.println(Log.DEBUG, TAG, data.email)
+
+            socket!!.emit("sign-up-request", Json.stringify(CredentialsRequestBody.serializer(), data))
         }
     }
 
@@ -70,7 +70,9 @@ class MainActivity : AppCompatActivity() {
                 emailEditText!!.text.toString(),
                 passwordEditText!!.text.toString())
 
-            socket?.emit("log-in-request", Json.stringify(CredentialsRequestBody.serializer(), data))
+            Log.println(Log.DEBUG, TAG, data.email)
+
+            socket!!.emit("log-in-request", Json.stringify(CredentialsRequestBody.serializer(), data))
         }
     }
 
@@ -80,15 +82,68 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setSocketIOListeners() {
-        socket = IO.socket("https://userportal-web.azurewebsites.net/")
+    private fun credentialOnClickListener(credentialEventType : String) : View.OnClickListener? {
+        return View.OnClickListener {
+            val data = CredentialsRequestBody(
+                emailEditText!!.text.toString(),
+                passwordEditText!!.text.toString())
 
-        socket?.on("auth-state-changed", Emitter.Listener {
-            if (it != null)
-                currentUserTextView!!.setText((it[0] as JSONObject).getString("email"))
-        })
+            Log.println(Log.DEBUG, TAG, credentialEventType)
+            Log.println(Log.DEBUG, TAG, data.email)
+
+            socket?.emit(credentialEventType, Json.stringify(CredentialsRequestBody.serializer(), data))
+        }
+    }
+
+    private fun setSocketIOListeners() {
+        val application = getApplication() as UserPortalApplication
+
+        socket = application.socket
+
+        socket?.on(Socket.EVENT_CONNECT, { Log.println(Log.DEBUG, TAG, "Connected") })
+
+        socket?.connect()
+
+        socket?.on("auth-state-changed") { args ->
+            this@MainActivity.runOnUiThread {
+                Log.println(Log.DEBUG, TAG, "Auth state changed! args size: " + args.size.toString())
+
+                for (item in args)
+                    item?.let { Log.println(Log.DEBUG, TAG, item.toString()) }
+
+                if (args[0] != "null") {
+                    val result = Json.nonstrict.parse(LoginSuccessResponseBody.serializer(), args[0] as String)
+                    currentUserTextView!!.text = result.email
+                }
+                else {
+                    currentUserTextView!!.text = "N/A"
+                }
+            }
+        }
+
+        socket?.on("sign-up-failure") { args ->
+            this@MainActivity.runOnUiThread {
+                Log.println(Log.DEBUG, TAG, "Sign up failure! args size: " + args.size.toString())
+
+                for (item in args)
+                    item?.let { Log.println(Log.DEBUG, TAG, item.toString()) }
+            }
+        }
+
+        socket?.on("log-in-failure") { args ->
+            this@MainActivity.runOnUiThread {
+                Log.println(Log.DEBUG, TAG, "Log in failure! args size: " + args.size.toString())
+
+                for (item in args)
+                    item?.let { Log.println(Log.DEBUG, TAG, item.toString()) }
+            }
+        }
+
     }
 
     @Serializable
-    data class CredentialsRequestBody (val username : String, val password : String)
+    data class CredentialsRequestBody (val email : String, val password : String)
+
+    @Serializable
+    data class LoginSuccessResponseBody (val email: String)
 }

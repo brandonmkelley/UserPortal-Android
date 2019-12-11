@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "957655912160",
+    "firebase_url": "https://userportal-fa7ab.firebaseio.com",
+    "project_id": "userportal-fa7ab",
+    "storage_bucket": "userportal-fa7ab.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:957655912160:android:7792599cf9e362bcd58a85",
+        "android_client_info": {
+          "package_name": "com.example.userportal_android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "957655912160-kp8rr635h40sm00ng5583aabu0d59fq9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7VCekfn8EoTL7psDpVmBrakyt9XY0iDM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "957655912160-kp8rr635h40sm00ng5583aabu0d59fq9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
