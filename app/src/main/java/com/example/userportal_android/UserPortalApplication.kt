@@ -15,6 +15,6 @@ class UserPortalApplication : Application() {
 
         socket = IO.socket("https://userportal-web.azurewebsites.net")
 
-        Log.println(Log.DEBUG, "Application", "Socket connection created.")
+        // Log.println(Log.DEBUG, "Application", "Socket connection created.")
     }
 }

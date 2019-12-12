@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
                 emailEditText!!.text.toString(),
                 passwordEditText!!.text.toString())
 
-            Log.println(Log.DEBUG, TAG, data.email)
+            // Log.println(Log.DEBUG, TAG, data.email)
 
             socket!!.emit("sign-up-request", Json.stringify(CredentialsRequestBody.serializer(), data))
         }
@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
                 emailEditText!!.text.toString(),
                 passwordEditText!!.text.toString())
 
-            Log.println(Log.DEBUG, TAG, data.email)
+            // Log.println(Log.DEBUG, TAG, data.email)
 
             socket!!.emit("log-in-request", Json.stringify(CredentialsRequestBody.serializer(), data))
         }
@@ -79,19 +79,6 @@ class MainActivity : AppCompatActivity() {
     private fun setOnClickListener_LogoutButton() {
         logoutButton!!.setOnClickListener {
             socket?.emit("log-out-request")
-        }
-    }
-
-    private fun credentialOnClickListener(credentialEventType : String) : View.OnClickListener? {
-        return View.OnClickListener {
-            val data = CredentialsRequestBody(
-                emailEditText!!.text.toString(),
-                passwordEditText!!.text.toString())
-
-            Log.println(Log.DEBUG, TAG, credentialEventType)
-            Log.println(Log.DEBUG, TAG, data.email)
-
-            socket?.emit(credentialEventType, Json.stringify(CredentialsRequestBody.serializer(), data))
         }
     }
 
@@ -106,16 +93,20 @@ class MainActivity : AppCompatActivity() {
 
         socket?.on("auth-state-changed") { args ->
             this@MainActivity.runOnUiThread {
+                /*
                 Log.println(Log.DEBUG, TAG, "Auth state changed! args size: " + args.size.toString())
 
                 for (item in args)
                     item?.let { Log.println(Log.DEBUG, TAG, item.toString()) }
+                 */
 
-                if (args[0] != "null") {
+                if (args[0] != null) {
                     val result = Json.nonstrict.parse(LoginSuccessResponseBody.serializer(), args[0] as String)
+                    Toast.makeText(applicationContext, "Logged in user: ${result.email}", Toast.LENGTH_SHORT).show();
                     currentUserTextView!!.text = result.email
                 }
                 else {
+                    Toast.makeText(applicationContext, "Logged out.", Toast.LENGTH_SHORT).show();
                     currentUserTextView!!.text = "N/A"
                 }
             }
@@ -123,19 +114,58 @@ class MainActivity : AppCompatActivity() {
 
         socket?.on("sign-up-failure") { args ->
             this@MainActivity.runOnUiThread {
+                /*
                 Log.println(Log.DEBUG, TAG, "Sign up failure! args size: " + args.size.toString())
 
                 for (item in args)
                     item?.let { Log.println(Log.DEBUG, TAG, item.toString()) }
+                 */
+
+                if (args[0] != null) {
+                    val result = Json.nonstrict.parse(FirebaseFailureBody.serializer(), args[0] as String)
+                    Toast.makeText(applicationContext, "Sign in failed: ${result.message}", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(applicationContext, "Sign in failed.", Toast.LENGTH_SHORT).show();
+                }
             }
         }
 
         socket?.on("log-in-failure") { args ->
             this@MainActivity.runOnUiThread {
+                /*
                 Log.println(Log.DEBUG, TAG, "Log in failure! args size: " + args.size.toString())
 
                 for (item in args)
                     item?.let { Log.println(Log.DEBUG, TAG, item.toString()) }
+                 */
+
+                if (args[0] != null) {
+                    val result = Json.nonstrict.parse(FirebaseFailureBody.serializer(), args[0] as String)
+                    Toast.makeText(applicationContext, "Log in failed: ${result.message}", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(applicationContext, "Log in failed.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+
+        socket?.on("log-out-failure") { args ->
+            this@MainActivity.runOnUiThread {
+                /*
+                Log.println(Log.DEBUG, TAG, "Log in failure! args size: " + args.size.toString())
+
+                for (item in args)
+                    item?.let { Log.println(Log.DEBUG, TAG, item.toString()) }
+                 */
+
+                if (args[0] != null) {
+                    val result = Json.nonstrict.parse(FirebaseFailureBody.serializer(), args[0] as String)
+                    Toast.makeText(applicationContext, "Log out failed: ${result.message}", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(applicationContext, "Log out failed.", Toast.LENGTH_SHORT).show();
+                }
             }
         }
 
@@ -146,4 +176,7 @@ class MainActivity : AppCompatActivity() {
 
     @Serializable
     data class LoginSuccessResponseBody (val email: String)
+
+    @Serializable
+    data class FirebaseFailureBody(val code : String, val message : String)
 }
