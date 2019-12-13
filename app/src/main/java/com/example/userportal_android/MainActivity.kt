@@ -169,6 +169,24 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        socket?.on("receive-update-user") { args ->
+            this@MainActivity.runOnUiThread {
+                /*
+                Log.println(Log.DEBUG, TAG, "Log in failure! args size: " + args.size.toString())
+
+                for (item in args)
+                    item?.let { Log.println(Log.DEBUG, TAG, item.toString()) }
+                 */
+
+                if (args[0] != null) {
+                    val result = Json.parse(UserUpdateResponseBody.serializer(), args[0] as String)
+                    Toast.makeText(applicationContext, "Received user update: ${result.displayName}", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(applicationContext, "Received user update.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
     }
 
     @Serializable
@@ -179,4 +197,7 @@ class MainActivity : AppCompatActivity() {
 
     @Serializable
     data class FirebaseFailureBody(val code : String, val message : String)
+
+    @Serializable
+    data class UserUpdateResponseBody(val displayName : String)
 }
